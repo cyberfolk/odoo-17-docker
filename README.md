@@ -1,6 +1,7 @@
-# Odoo 17 | Docker | Windows/WSL
+# Odoo 17 | Docker
 
-> **Scaffolding Docker Compose** per avviare in pochi minuti un’istanza Odoo 17 in locale (Windows + WSL2 + Docker Desktop), con PostgreSQL e supporto per moduli custom e dipendenze extra.
+> Repository per avviare **Odoo 17** in pochi minuti tramite **Docker**, con configurazioni pronte all’uso sia per sviluppo locale che per deploy su AWS.  
+> Include [Docker | Mini Guida](readme/docs-docker.md) per le conoscenze di base.
 
 ---
 
@@ -26,41 +27,37 @@ docker compose up -d
 
 ---
 
-## 📚 Indice
+## 📌 Obbiettivi del progetto
 
-- [Odoo 17 | Docker | Windows/WSL](#odoo-17--docker--windowswsl)
-  - [🚀 Quick Run](#-quick-run)
-  - [📚 Indice](#-indice)
-  - [📌 Dettagli del progetto](#-dettagli-del-progetto)
-  - [Requisiti](#requisiti)
-  - [Struttura della repo](#struttura-della-repo)
-  - [Docker | Concetti chiave](#docker--concetti-chiave)
-  - [WSL2 | Concetti chiave](#wsl2--concetti-chiave)
-    - [Git Bash ≠ WSL](#git-bash--wsl)
-  - [Docker | Comandi base](#docker--comandi-base)
-  - [Dove finiscono i file di Odoo](#dove-finiscono-i-file-di-odoo)
-  - [FAQ](#faq)
+- **Orchestrare** due container Docker:
+    1. **PostgreSQL 15** → come database di backend
+    2. **Odoo 17** → come server applicativo
+- **Parametrizzare** le credenziali e la configurazione tramite variabili d’ambiente (`.env`)
+- **Gestire** una cartella `./addons` per caricare moduli custom.
+- **Personalizzare** la configurazione di Odoo tramite `config/odoo.conf`
 
 ---
 
-## 📌 Dettagli del progetto
+## 🛠️ 4 Branch disponibili
 
-Questa repository fornisce una configurazione pronta all’uso per:
+La repo ha **4 branch** (diversi livelli di setup) documentati nella cartella `readme/`.  
+Il contenuto di `readme/` è identico in tutti i branch; cambia solo il **codice** (YAML, Dockerfile, ecc.).  
+Gli step 2 e 3, per ora, contengono solo la descrizione dell’idea: il branch sarà sviluppato in seguito.
 
--   **Orchestrare** due container Docker:
-    1. **PostgreSQL 15** come database di backend
-    2. **Odoo 17** come server applicativo
--   **Parametrizzare** le credenziali e la configurazione tramite variabili d’ambiente (`.env`)
--   **Gestire** una cartella `./addons` per sviluppare e testare moduli personalizzati senza ricostruire l’immagine
--   **Personalizzare** la configurazione di Odoo tramite `config/odoo.conf`
+- [**local**](readme/step-1.md) → esecuzione in locale su PC
+- [**AWS 1**](readme/step-1.md) → primo deploy AWS (configurazione base su EC2)
+- [**AWS 2**](readme/step-2.md) → *(in sviluppo)* versione avanzata con ottimizzazioni aggiuntive
+- [**AWS 3**](readme/step-3.md) → *(in sviluppo)* versione avanzata con ulteriori servizi
 
 ---
 
-## Requisiti
+## ⚠️ Attenzione - PC Windows
 
--   **Windows 10/11** con **WSL2** attivo
--   **Docker Desktop** configurato per usare WSL2
--   **Git** per clonare la repo
+Se stai eseguendo il codice in ambiente **Windows**, assicurati di:
+
+- Avere **Docker Desktop** configurato per usare WSL2
+- Avere **WSL2** installato e attivo → [vedi guida](LINK-PLACEHOLDER)
+- Utilizzare il **Terminale Ubuntu** per seguire quata guida.
 
 ---
 
@@ -79,91 +76,14 @@ Questa repository fornisce una configurazione pronta all’uso per:
 
 ---
 
-## Docker | Concetti chiave
+## 📚 Indice
 
--   **Immagine**: template immutabile (es. `odoo:17`)
--   **Container**: istanza in esecuzione dell’immagine
--   **Volume**: spazio persistente (DB, filestore)
--   **Bind mount**: mappa cartella locale nel container (`./addons:/mnt/extra-addons`)
--   **Network**: rete interna tra servizi (`db` ↔︎ `odoo`)
--   **Compose**: orchestra più servizi (`docker compose up`)
--   **image** VS **build**:
-    -   `image: odoo:17` → immagine precompilata
-    -   `build: .` → compila immagine personalizzata con `Dockerfile`
+- [🚀 Quick Run](#-quick-run)
+- [📌 Obbiettivi del progetto](#-obbiettivi-del-progetto)
+- [🛠️ 4 Branch disponibili](#️-4-branch-disponibili)
+- [⚠️ Attenzione - PC Windows](#️-attenzione-pc-windows)
+- [WSL2 | Mini Guida](readme/docs-wsl.md)
+- [Docker | Mini Guida](readme/docs-docker.md)
+- [FAQ](readme/docs-faq.md)
 
 ---
-
-## WSL2 | Concetti chiave
-
-Docker su Windows richiede **WSL2** perché lo usa nel backend.
-
-**Aggiorna/installa WSL2:**
-
-```powershell
-# da PowerShell (amministratore)
-wsl --update
-wsl --set-default-version 2
-wsl --install   # se non hai una distro; installerà Ubuntu
-```
-
-**Dopo l’installazione:** apri **Ubuntu**, crea un utente e verifica:
-
-```bash
-uname -r                       # kernel WSL2 attivo
-docker --version               # Docker disponibile
-docker run hello-world         # smoke test
-```
-
-### Git Bash ≠ WSL
-
-| Git Bash                                   | WSL 2                               |
-| ------------------------------------------ | ----------------------------------- |
-| Emulatore Bash su Windows                  | Vero ambiente Linux integrato       |
-| Esegue tool tipo Unix, ma resta in Windows | Esegue nativamente binari Linux     |
-| Non sostituisce WSL per Docker             | Backend usato da **Docker Desktop** |
-
-💡 Mapping dischi: `C:\...` in Windows ↔︎ `/mnt/c/...` in WSL
-
----
-
-## Docker | Comandi base
-
-```bash
-docker ps                     # container attivi
-docker ps -a                  # tutti (inclusi spenti)
-docker logs -f <nome>         # tail log
-docker exec -it <nome> bash   # shell nel container
-docker compose up -d          # avvia
-docker compose down           # ferma
-docker compose down -v        # ferma + rimuove volumi (⚠️ perdi dati)
-docker system df              # spazio usato
-docker image prune -f         # pulizia immagini inutilizzate
-```
-
----
-
-## Dove finiscono i file di Odoo
-
--   **Core Odoo** → dentro il container
--   **`./addons`** → unica cartella montata per moduli custom
--   **Volumi**:
-    -   `db-data` → database Postgres
-    -   `odoo-data` → filestore
-
-Per vedere il core dentro il container:
-
-```bash
-docker exec -it <nome_container_odoo> bash
-cd /usr/lib/python3/dist-packages/odoo
-ls
-```
-
----
-
-## FAQ
-
--   **Posso usare solo Git Bash?** → No, serve WSL2
--   **I file core Odoo compaiono localmente?** → No, vivono nel container
--   **Posso sviluppare moduli con Docker?** → Sì, montando `./addons`
--   **Dove stanno i dati?** → Nei volumi `db-data` e `odoo-data`
--   **Come resetto tutto?** → `docker compose down -v` (⚠️ perdi dati)
