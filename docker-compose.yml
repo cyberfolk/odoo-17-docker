@@ -29,7 +29,6 @@ services:
       - odoo-db-data:/var/lib/postgresql/data/pgdata
     secrets:
       - db_password
-      - db_user
 
 volumes:
   odoo-web-data:
