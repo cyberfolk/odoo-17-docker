@@ -19,6 +19,7 @@ code .env # modifica DB_PASSWORD con un valore sicuro
 # Avvia i container
 docker compose build
 docker compose up -d
+docker compose exec odoo odoo-init
 
 # Accedi a Odoo
 # URL: http://localhost:8069

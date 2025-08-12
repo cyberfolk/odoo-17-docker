@@ -4,17 +4,20 @@ services:
     environment:
       POSTGRES_USER: ${DB_USER}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
-      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_DB: ${DB_NAME}
     healthcheck:   # Verifica che Postgres sia *davvero* pronto prima di avviare Odoo.
       interval: 5s # Controlla ogni 5s…
       timeout: 5s  # …con timeout 5s…
       retries: 20  # …per max ~100s complessivi.
-      test: [ "CMD-SHELL", "pg_isready -U ${DB_USER} -d ${POSTGRES_DB} -h 127.0.0.1" ]
+      test: [ "CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME} -h 127.0.0.1" ]
     volumes:
       - db-data:/var/lib/postgresql/data # Volume persistente per i dati del DB.
 
   odoo:
     build: . # Costruisce un'immagine custom dal Dockerfile nella stessa cartella.
+    command: >
+      odoo -c /etc/odoo/odoo.conf
+      --admin_passwd=${ADMIN_PASSWORD}
     depends_on:
       db:
         condition: service_healthy # Avvia Odoo solo quando il DB è “healthy” (non solo “in esecuzione”).
