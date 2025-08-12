@@ -1,51 +1,40 @@
 services:
-  db:
-    image: postgres:15 # PG15 è compatibile con Odoo 17.
-    environment:
-      POSTGRES_USER: ${DB_USER}
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
-      POSTGRES_DB: ${DB_NAME}
-    healthcheck:   # Verifica che Postgres sia *davvero* pronto prima di avviare Odoo.
-      interval: 5s # Controlla ogni 5s…
-      timeout: 5s  # …con timeout 5s…
-      retries: 20  # …per max ~100s complessivi.
-      test: [ "CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME} -h 127.0.0.1" ]
-    volumes:
-      - db-data:/var/lib/postgresql/data # Volume persistente per i dati del DB.
-
-  odoo:
-    build: . # Costruisce un'immagine custom dal Dockerfile nella stessa cartella.
-    command: >
-      odoo -c /etc/odoo/odoo.conf
-      --db_host=${DB_HOST}
-      --db_port=${DB_PORT}
-      --db_user=${DB_USER}
-      --db_password=${DB_PASSWORD}
-      --admin_passwd=${ADMIN_PASSWORD}
+  web:
+    build: .
+    image: odoo:17
     depends_on:
-      db:
-        condition: service_healthy # Avvia Odoo solo quando il DB è “healthy” (non solo “in esecuzione”).
+      - db
     ports:
-      - "8069:8069" # Porta web di Odoo.
-      - "8072:8072" # Longpolling (push/notifications). Se non lo usi, puoi ometterla.
-    environment:
-      DB_HOST: ${DB_HOST} # Variabili che l'immagine ufficiale Odoo legge all'avvio.
-      DB_PORT: ${DB_PORT}
-      DB_USER: ${DB_USER}
-      DB_PASSWORD: ${DB_PASSWORD}
-
-    # Volumi montati nel container Odoo:
-    # Ogni riga segue la sintassi "host:container"
-    #   - prima dei ":" = percorso sul tuo PC (o volume Docker)
-    #   - dopo i ":" = percorso interno al container
-    # I mount possono:
-    #   - Sostituire file/cartelle interni con quelli locali (sviluppo diretto)
-    #   - Usare volumi Docker nominati per mantenere i dati persistenti
+      - "8069:8069"
     volumes:
-      - ./config/odoo.conf:/etc/odoo/odoo.conf # Monta la tua config (necessario che esista).
-      - odoo-data:/var/lib/odoo # Filestore persistente (allegati, ecc.).
-      - ./addons:/mnt/extra-addons # I tuoi moduli custom, editabili da host.
+      - odoo-web-data:/var/lib/odoo
+      - ./config:/etc/odoo
+      - ./addons:/mnt/extra-addons
+    environment:
+      - PASSWORD_FILE=/run/secrets/db_password
+      - USER = odoo
+      - HOST=db
+
+    secrets:
+      - db_password
+
+  db:
+    image: postgres:15
+    environment:
+      - POSTGRES_PASSWORD_FILE=/run/secrets/db_password
+      - POSTGRES_USER = odoo
+      - POSTGRES_DB = postgres
+      - PGDATA=/var/lib/postgresql/data/pgdata
+    volumes:
+      - odoo-db-data:/var/lib/postgresql/data/pgdata
+    secrets:
+      - db_password
+      - db_user
 
 volumes:
-  db-data:   # Volume nominato: dati Postgres.
-  odoo-data: # Volume nominato: filestore Odoo.
+  odoo-web-data:
+  odoo-db-data:
+
+secrets:
+  db_password:
+    file: ./secrets/db_password

@@ -12,18 +12,15 @@
 git clone git@github.com:cyberfolk/odoo-17-docker.git
 cd odoo-17-docker
 
-# Prepara il file .env
-cp .env.example .env
-code .env # modifica DB_PASSWORD con un valore sicuro
+# Cambia il contenuto di /secrets/db_password
+# Cambia admin_passwd dentro /config/odoo.conf
 
 # Avvia i container
 docker compose build
 docker compose up -d
-docker compose exec odoo odoo-init
 
 # Accedi a Odoo
 # URL: http://localhost:8069
-# Password database manager: admin (vedi config/odoo.conf)
 ```
 
 ---
@@ -35,7 +32,6 @@ docker compose exec odoo odoo-init
     2. **Odoo 17** → come server applicativo
 - **Parametrizzare** le credenziali e la configurazione tramite variabili d’ambiente (`.env`)
 - **Gestire** una cartella `./addons` per caricare moduli custom.
-- **Personalizzare** la configurazione di Odoo tramite `config/odoo.conf`
 
 ---
 
@@ -57,7 +53,7 @@ Gli step 2 e 3, per ora, contengono solo la descrizione dell’idea: il branch s
 Se stai eseguendo il codice in ambiente **Windows**, assicurati di:
 
 - Avere **Docker Desktop** configurato per usare WSL2
-- Avere **WSL2** installato e attivo → [vedi guida](LINK-PLACEHOLDER)
+- Avere **WSL2** installato e attivo → [vedi guida](readme/docs-wsl.md)
 - Utilizzare il **Terminale Ubuntu** per seguire quata guida.
 
 ---
@@ -69,6 +65,7 @@ Se stai eseguendo il codice in ambiente **Windows**, assicurati di:
 ├── .env                # Valori reali (non committato)
 ├── docker-compose.yml  # Orchestrazione servizi
 ├── Dockerfile          # Per build custom di Odoo (non necessario se usi l'immagine ufficiale)
+├── secrets             # Password per configurare docker
 ├── config/
 │   └── odoo.conf       # Configurazione Odoo parametrizzata
 ├── addons/             # Moduli custom
