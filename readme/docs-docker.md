@@ -30,6 +30,8 @@ docker compose down           # ferma
 docker compose down -v        # ferma + rimuove volumi (⚠️ perdi dati)
 docker system df              # spazio usato
 docker image prune -f         # pulizia immagini inutilizzate
+docker compose down -v --remove-orphans
+docker volume rm -f odoo-17-docker_odoo-data
 ```
 
 ---

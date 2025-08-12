@@ -17,6 +17,10 @@ services:
     build: . # Costruisce un'immagine custom dal Dockerfile nella stessa cartella.
     command: >
       odoo -c /etc/odoo/odoo.conf
+      --db_host=${DB_HOST}
+      --db_port=${DB_PORT}
+      --db_user=${DB_USER}
+      --db_password=${DB_PASSWORD}
       --admin_passwd=${ADMIN_PASSWORD}
     depends_on:
       db:
