@@ -12,7 +12,7 @@ services:
       - ./addons:/mnt/extra-addons
     environment:
       - PASSWORD_FILE=/run/secrets/db_password
-      - USER = odoo
+      - USER=odoo
       - HOST=db
 
     secrets:
@@ -22,8 +22,8 @@ services:
     image: postgres:15
     environment:
       - POSTGRES_PASSWORD_FILE=/run/secrets/db_password
-      - POSTGRES_USER = odoo
-      - POSTGRES_DB = postgres
+      - POSTGRES_USER=odoo
+      - POSTGRES_DB=postgres
       - PGDATA=/var/lib/postgresql/data/pgdata
     volumes:
       - odoo-db-data:/var/lib/postgresql/data/pgdata
