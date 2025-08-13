@@ -31,6 +31,7 @@ docker compose up -d
     1. **PostgreSQL 15** → come database di backend
     2. **Odoo 17** → come server applicativo
 - **Parametrizzare** la password del DB tramite `secrets/`
+- **Aggiungere** una cartella `./cyberfolk` contenenti i sottomoduli di altre repo.
 - **Gestire** una cartella `./addons` per caricare moduli custom.
 
 ---

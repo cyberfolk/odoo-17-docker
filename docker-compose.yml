@@ -10,6 +10,7 @@ services:
       - odoo-web-data:/var/lib/odoo
       - ./config:/etc/odoo
       - ./addons:/mnt/extra-addons
+      - ./cyberfolk:/mnt/cyberfolk-addons
     environment:
       - PASSWORD_FILE=/run/secrets/db_password
       - USER=odoo
