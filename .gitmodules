@@ -1,8 +1,8 @@
 [submodule "cyberfolk/odoo_utility"]
 	path = cyberfolk/odoo_utility
-	url = git@github.com:cyberfolk/odoo_utility.git
+	url = https://github.com/cyberfolk/odoo_utility.git
 	branch = 17.0
 [submodule "cyberfolk/odoo_ded"]
 	path = cyberfolk/odoo_ded
-	url = git@github.com:cyberfolk/odoo_ded.git
+	url = https://github.com/cyberfolk/odoo_ded.git
 	branch = 17.0
