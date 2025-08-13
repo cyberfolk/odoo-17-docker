@@ -30,21 +30,20 @@ docker compose up -d
 - **Orchestrare** due container Docker:
     1. **PostgreSQL 15** → come database di backend
     2. **Odoo 17** → come server applicativo
-- **Parametrizzare** le credenziali e la configurazione tramite variabili d’ambiente (`.env`)
+- **Parametrizzare** la password del DB tramite `secrets/`
 - **Gestire** una cartella `./addons` per caricare moduli custom.
 
 ---
 
-## 🛠️ 4 Branch disponibili
+## 🛠️ Sviluppi
 
-La repo ha **4 branch** (diversi livelli di setup) documentati nella cartella `readme/`.  
-Il contenuto di `readme/` è identico in tutti i branch; cambia solo il **codice** (YAML, Dockerfile, ecc.).  
-Gli step 2 e 3, per ora, contengono solo la descrizione dell’idea: il branch sarà sviluppato in seguito.
+Gli sviluppi futuri e le versioni intermedie sono documentati nei file all’interno della cartella `readme/`:
 
-- [**local**](readme/step-1.md) → esecuzione in locale su PC
-- [**AWS 1**](readme/step-1.md) → primo deploy AWS (configurazione base su EC2)
-- [**AWS 2**](readme/step-2.md) → *(in sviluppo)* versione avanzata con ottimizzazioni aggiuntive
-- [**AWS 3**](readme/step-3.md) → *(in sviluppo)* versione avanzata con ulteriori servizi
+- **Step 0** → Versione base, eseguibile sia in locale che su AWS.  
+  *(Il README principale fa riferimento a questa versione.)*
+- [**Step 2**](readme/step-2.md) → *(in sviluppo)* SSM Parameter Store, Nginx, CI/CD
+- [**Step 3**](readme/step-3.md) → *(in sviluppo)* versione avanzata con ottimizzazioni aggiuntive
+- [**Step 4**](readme/step-4.md) → *(in sviluppo)* versione avanzata con ulteriori servizi
 
 ---
 

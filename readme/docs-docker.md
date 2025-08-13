@@ -18,6 +18,27 @@
 
 ---
 
+## Struttura dei docker-compose.yml
+
+
+- **docker-compose.yml** → configurazione comune a tutti gli ambienti (dev, staging, prod).
+- **docker-compose.override.yml** → se presente verrà sempre caricato di default assieme a **docker-compose.yml** (senza specificare `-f`).
+- **docker-compose.prod.yml** → override esplicito per produzione (passato con `-f`).
+
+**Esecuzione con merge**
+
+```bash
+docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+```
+
+Docker fa il **merge in ordine**:
+
+1. Carica `docker-compose.yml`
+2. Carica `docker-compose.prod.yml` sovrascrivendo o aggiungendo chiavi
+3. Risultato = configurazione finale eseguita
+
+---
+
 ## Comandi base
 
 ```bash
