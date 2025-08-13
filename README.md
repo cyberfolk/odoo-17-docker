@@ -15,6 +15,9 @@ cd odoo-17-docker
 # Cambia il contenuto di /secrets/db_password
 # Cambia admin_passwd dentro /config/odoo.conf
 
+git submodule sync --recursive
+git submodule update --init --recursive
+
 # Avvia i container
 docker compose build
 docker compose up -d
