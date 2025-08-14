@@ -1,0 +1,24 @@
+{
+	# Email usato per Let’s Encrypt (rinnovi/avvisi)
+	email ${CADDY_EMAIL}
+}
+
+# Sostituisci {$DOMAIN} con il tuo dominio/subdominio (es. echo-duck.duckdns.org)
+${CADDY_DOMAIN} {
+	# Compressione
+	encode gzip
+
+	# Header di sicurezza basilari
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		X-Content-Type-Options "nosniff"
+	}
+
+	# Odoo longpolling / websocket (porta 8072)
+	@longpoll path /longpolling* /websocket
+	reverse_proxy @longpoll odoo:8072
+
+	# Tutto il resto va all'HTTP normale di Odoo (porta 8069)
+	reverse_proxy odoo:8069
+}

@@ -1,0 +1,23 @@
+services:
+  # Aggiungi Caddy come reverse proxy con HTTPS automatico
+  caddy:
+    image: caddy:2-alpine
+    container_name: caddy
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      # Imposta qui il dominio e l'email per Let's Encrypt
+      - DOMAIN=${CADDY_DOMAIN}
+      - LETSENCRYPT_EMAIL=${CADDY_EMAIL}
+    volumes:
+      - ./reverse-proxy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    networks:
+      - default  # deve vedere il servizio 'odoo' per il proxy
+
+volumes:
+  caddy_data:
+  caddy_config:
