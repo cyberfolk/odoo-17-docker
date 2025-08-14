@@ -48,8 +48,3 @@
 
 - **Vuoi HTTPS oggi e iniziare a usare Odoo senza sbatti?** → **Caddy**.
 - **Vuoi capire davvero come funziona un proxy in produzione (didattico) e avere massimo controllo?** → **Nginx + Certbot**.
-
-Con i tuoi obiettivi (imparare step-by-step, budget basso, primi mesi da solo):
-
-- Parti con **Caddy** (rapidità).
-- Quando passi allo **Step 2 didattico**, rifai lo stack con **Nginx + Certbot** per capire bene TLS, header e tuning.

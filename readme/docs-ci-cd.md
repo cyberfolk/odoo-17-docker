@@ -1,5 +1,8 @@
 # CI/CD
 
+> **TODO** - Da rivedere e da implementare.
+
+
 **CI/CD** sta per *Continuous Integration* e *Continuous Deployment* (o *Delivery*).  
 L'idea è automatizzare il processo che porta il codice dallo sviluppo alla produzione:
 
