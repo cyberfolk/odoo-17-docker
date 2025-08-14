@@ -1,4 +1,4 @@
-{CADDY_$DOMAIN} {
+{$CADDY_DOMAIN} {
 	# Se vuoi, metti la tua email (se è vuota, rimuovi la riga)
 	tls {$CADDY_EMAIL}
 
