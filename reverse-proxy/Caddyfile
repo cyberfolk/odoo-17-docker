@@ -1,6 +1,6 @@
-{$CADDY_DOMAIN} {
+{$DOMAIN} {
 	# Se vuoi, metti la tua email (se è vuota, rimuovi la riga)
-	tls {$CADDY_EMAIL}
+	tls {$LETSENCRYPT_EMAIL}
 
 	encode gzip
 
@@ -12,8 +12,8 @@
 
 	# Longpolling Odoo (8072)
 	@longpoll path /longpolling*
-	reverse_proxy @longpoll odoo:8072
+	reverse_proxy @longpoll web:8072
 
 	# Resto del traffico → Odoo (8069)
-	reverse_proxy odoo:8069
+	reverse_proxy web:8069
 }
