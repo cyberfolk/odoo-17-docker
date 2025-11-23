@@ -1,73 +1,205 @@
-# Sviluppi Futuri
+# Sviluppi Futuri — Roadmap Didattica (incrementale)
 
-> **TODO** - Da rivedere e da implementare.
+> Obiettivo: trasformare il setup Odoo in un percorso di apprendimento a step brevi, ognuno con uno scopo chiaro e un risultato verificabile.  
+> Assunzione: **Step 0** (Odoo in Docker su una singola macchina, rete Docker interna, no HTTPS) è già operativo.
 
-## Step 2
+---
 
-- Recuperare i secrets tramite **entrypoint** e **AWS SSM Parameter Store**
-- Nginx
-- [CI/CD](docs-ci-cd.md)
+## 🔎 Mappa rapida
+- **Step 1** → HTTPS facile con **Caddy** (gratis, veloce).
+- **Step 2** → Alternativa didattica: **Nginx + Certbot**.
+- **Step 3** → **Secrets** da **AWS SSM/Secrets Manager** via `entrypoint`.
+- **Step 4** → **Backup & Log** di base (DB + filestore) e rete proxy → app.
+- **Step 5** → **RDS Postgres** (“Quando i dati contano”).
+- **Step 6** → **CI/CD** (GitHub Actions → build & deploy).
+- **Step 7** → **HA/Scalabilità** (ALB, 2+ app, EFS/S3, osservabilità).
 
-# Step 3 - Quando i dati contano
+> Mappatura dal documento originale:
+> - “Step 2 (entrypoint + SSM) / Nginx / CI/CD” → ora **Step 2–3–6** separati.  
+> - “Step 3 — Quando i dati contano” → ora **Step 5**.  
+> - “Migrazione a Step 4 (HA/Scalabilità)” → ora **Step 7**.
 
-**Mettere in sicurezza i dati e le credenziali senza complicare troppo l’infrastruttura.**
+---
 
-**Cosa fare**
+## Step 1 — HTTPS in 15 minuti (Caddy, budget ~0€)
 
-- Spostare il DB da Docker a **RDS** (gestito, backup automatici, ripristino point-in-time)
-- Togliere i segreti dal disco usando **Secrets Manager/Parameter Store**, con **Security Group** stretti.
+**Impari**: reverse proxy, terminazione TLS, rete Docker.  
+**Prerequisiti**: subdominio (es. `duckdns.org`).
+
+**Fai**
+- [ ] Aggiungi **Caddy** al `docker-compose` come reverse proxy.
+- [ ] Termina TLS su `:443` (Let’s Encrypt automatico).
+- [ ] Proxy verso `odoo:8069` e longpolling `odoo:8072`.
+- [ ] Esponi solo il proxy (app rimane in rete interna).
+
+**Output atteso**
+- ✅ Odoo disponibile in **HTTPS** con certificato valido.
+- ✅ Niente gestione manuale dei certificati.
+
+**Non copre**
+- ❌ Sicurezza credenziali, ❌ backup, ❌ HA.
+
+> Alternative: **Traefik** (auto-HTTPS via labels), più “devopsy”.
+
+---
+
+## Step 2 — Nginx + Certbot (più manuale, più didattico)
+
+**Impari**: virtual host, challenge ACME, rinnovo cert.  
+**Fai**
+- [ ] Sostituisci o affianca Caddy con **Nginx**.
+- [ ] Usa **Certbot** per ottenere/rinnovare i certificati.
+- [ ] Configura server block per `/:443` → proxy a Odoo.
+
+**Pro**
+- ✅ Massimo controllo, utile per imparare Nginx.  
+**Contro**
+- ❌ Più manutenzione (rinnovi, config).
+
+---
+
+## Step 3 — Secrets da AWS (SSM/Secrets Manager) via `entrypoint`
+
+**Impari**: secret management, iniezione runtime, principle of least privilege.
+
+**Fai**
+- [ ] Crea parametri **SSM** o **Secrets Manager** (es. `/odoo/db_password`).
+- [ ] Nel container, `entrypoint` che **legge i secrets** e li **esporta** come env/`odoo.conf`.
+- [ ] Evita file in chiaro nel repo e sul disco della VM.
+- [ ] IAM role/instance profile con permessi **read-only** a quel path.
+
+**Output atteso**
+- ✅ Nessuna password hardcoded nei file.  
+- ✅ Rotazione più semplice.
+
+**Non copre**
+- ❌ Affidabilità DB, ❌ backup gestiti.
+
+---
+
+## Step 4 — Backup & Log di base + separazione proxy/app
+
+**Impari**: operabilità minima, recovery, visibilità.
+
+**Fai**
+- [ ] **Backup DB** (se locale): `pg_dump` giornaliero su volume + sync su S3.  
+- [ ] **Backup filestore**: tar + upload su S3.  
+- [ ] **Log**: centralizza stdout/stderr (es. file log del proxy, rotazione).  
+- [ ] App dietro proxy solo su rete interna; esponi pubblicamente **solo il proxy**.
+
+**Output atteso**
+- ✅ Snapshot minimi di DB + filestore.  
+- ✅ Log consultabili/ruotati.
+
+**Non copre**
+- ❌ RPO/RTO seri, ❌ ripristini point-in-time.
+
+---
+
+## Step 5 — Quando i dati contano: sposta il DB su **RDS Postgres**
+
+**Impari**: servizio gestito, snapshot automatiche, security groups.
+
+**Cosa fai**
+- [ ] Crea **RDS Postgres** con backup automatici e **PITR** abilitato.
+- [ ] Security Group: **solo** EC2/ECS ↔ RDS su **5432**.
+- [ ] In `odoo.conf`: `db_host=<endpoint RDS>`.
+- [ ] In Compose: **rimuovi** il servizio `db`.
+- [ ] Backup: snapshot RDS + (opzionale) export su S3.
 
 **Cosa ottieni**
-
-- Affidabilità DB più alta (backup, patching, restore).
-- Miglior **RPO/RTO** (snapshot + PITR).
-- Niente password in chiaro sulla VM.
-- Superficie d’attacco ridotta (5432 solo EC2↔RDS).
+- ✅ Affidabilità DB (patching, snapshot).  
+- ✅ Miglior **RPO/RTO**.
 
 **Cosa NON risolve**
+- ❌ HA dell’app (resta 1 istanza).  
+- ❌ Filestore condiviso / scaling orizzontale.  
+- ❌ Zero-downtime deploy.
 
-- Niente **HA** dell’app (resta 1 EC2).
-- Niente filestore condiviso/scaling orizzontale.
-- Niente zero-downtime deploy.
+---
 
-**Impatto operativo minimo**
+## Step 6 — CI/CD (GitHub Actions → build & deploy)
 
-- Cambi `db_host` → endpoint RDS.
-- Rimuovi il servizio `db` dal Compose.
-- Sposti i segreti in Secrets/SSM.
-- Backup: snapshot RDS + export su S3.
+**Impari**: pipeline, registry, deploy ripetibili.
 
-*Modifiche principali*
+**Fai**
+- [ ] Workflow **GitHub Actions**: build immagine Odoo → push su **registry** (Docker Hub o **ECR**).  
+- [ ] Deploy:  
+  - Variante semplice: **EC2** via SSH + `docker compose pull && up -d`.  
+  - Variante cloud-native: **ECS/Fargate** con task definition aggiornate.
+- [ ] Conserva artefatti (immagini versionate) e fai **tagging** coerente.
 
-- In `odoo.conf`: `db_host=<endpoint RDS>`
-- In Compose: rimuovi il servizio `db`.
-- **Backup**: usa snapshot RDS + export periodico su S3.
+**Output atteso**
+- ✅ Deploy da Git con un click/merge.  
+- ✅ Build ripetibili/versionate.
 
-# Migrazione a Step 4 (HA/Scalabilità)
+---
 
-- **EFS** per filestore condiviso (o S3 + modulo)
-- **ALB** + 2+ istanze Odoo (ECS/Fargate o più EC2)
-- **Observability**: CloudWatch Logs/metrics, o stack ELK; healthcheck ALB
-- **Deploy**: GitHub Actions → ECR → ECS roll‑out
+## Step 7 — HA/Scalabilità
 
-## Step 2 — HTTPS facile (budget ~0€)
+**Impari**: bilanciamento, stato condiviso, osservabilità.
 
-Opzione **più semplice**: **Caddy** davanti a Odoo (auto-HTTPS Let’s Encrypt).
+**Fai**
+- [ ] **ALB** davanti a 2+ istanze Odoo (su **ECS/Fargate** o più **EC2**).  
+- [ ] **Filestore condiviso**: **EFS** (semplice) oppure **S3** + modulo.  
+- [ ] **Observability**: CloudWatch Logs/Metrics (o ELK), healthcheck ALB.  
+- [ ] **Deploy**: GitHub Actions → ECR → ECS **rolling/blue-green**.
 
-- Prendi un **subdominio gratuito** (es. `mio-nome.duckdns.org`).
-- Aggiungi **Caddy** nel `docker-compose` come reverse proxy:
-    - Termina TLS su **:443** (Caddy fa i certificati da solo).
-    - Proxy → `odoo:8069` e `longpolling:8072`.
-- **Pro**: niente sbattimento certificati, tutto automatico.
-- **Contro**: devi usare un subdominio free (va benissimo per te e gli amici).
+**Output atteso**
+- ✅ Alta disponibilità base.  
+- ✅ Scaling orizzontale dell’app.
 
-> Alternative equivalenti:
->
-> - **Nginx** + **Certbot** (più manuale, più didattico).
-> - **Traefik** (ottimo con Docker labels, auto-HTTPS; un filo più “devopsy”).
+---
 
-## Step 3 — Ammodernare e preparare alla CI/CD
+## Appendix — Checklist veloci per ogni step
 
-- Sposta la terminazione TLS su proxy (Caddy/Nginx/Traefik), **Odoo dietro** su rete Docker interna.
-- Aggiungi **backup** (DB + filestore) e log decenti.
-- Più avanti: **GitHub Actions** → build/push immagine → deploy su EC2/ECS.
+- **Step 1 (Caddy)**  
+  - [ ] DNS → IP pubblico  
+  - [ ] `docker-compose` con `caddy` + mount per state  
+  - [ ] Proxy `:443` → `odoo:8069/8072`
+
+- **Step 2 (Nginx+Certbot)**  
+  - [ ] Certbot HTTP-01/ALPN-01  
+  - [ ] vhost `server_name` + `proxy_pass`
+
+- **Step 3 (Secrets)**  
+  - [ ] Parametri in SSM/Secrets  
+  - [ ] `entrypoint` che esporta env/`odoo.conf`  
+  - [ ] IAM limitato read-only
+
+- **Step 4 (Backup/Log)**  
+  - [ ] `pg_dump` + tar filestore + upload S3  
+  - [ ] Rotazione log  
+  - [ ] App non esposta pubblicamente
+
+- **Step 5 (RDS)**  
+  - [ ] RDS con backup/PITR  
+  - [ ] SG 5432 ristretto  
+  - [ ] `db_host` aggiornato
+
+- **Step 6 (CI/CD)**  
+  - [ ] GH Actions: build + push  
+  - [ ] Deploy EC2/ECS  
+  - [ ] Tagging/versioning
+
+- **Step 7 (HA)**  
+  - [ ] ALB + target group  
+  - [ ] EFS/S3 per filestore  
+  - [ ] Logs/metrics centralizzati
+
+---
+
+## Note pratiche
+
+- **Caddy vs Nginx**  
+  - Caddy = veloce, auto-HTTPS.  
+  - Nginx = più controllo, più lavoro; ottimo per imparare.
+
+- **SSM vs Secrets Manager**  
+  - SSM (Parameter Store) è sufficiente e costa meno; Secrets Manager ha rotazione nativa.
+
+- **Ordine consigliato**  
+  - Se vuoi imparare “per layer”: 1 → 3 → 4 → 5 → 6 → 7 (2 opzionale).  
+  - Se punti presto al deploy automatizzato: 1 → 2/3 → 6 → 5 → 7.
+
+---
