@@ -40,8 +40,7 @@ cp .env.template .env
 # Cambia CADDY_DOMAIN e CADDY_EMAIL su .env
 
 # Avvia i container
-docker docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
-docker compose up -d
+docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
 
 # Accedi a Odoo da: https://<CADDY_DOMAIN>
 ```
